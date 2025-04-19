@@ -3,7 +3,6 @@ module PandasParquet
     
     using Parquet, DataFrames, JSON3, CategoricalArrays
     using Dates, TimeZones
-    
 
     # See https://numpy.org/doc/stable/reference/arrays.datetime.html#datetime-units for mapping
     const NUMPY_DATETIME_UNITS = Dict{String, Period}(

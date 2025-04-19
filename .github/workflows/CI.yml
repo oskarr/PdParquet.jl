@@ -1,9 +1,6 @@
 name: CI
 on:
   push:
-    branches:
-      - main
-    tags: ['*']
   pull_request:
   workflow_dispatch:
 concurrency:
@@ -12,8 +9,33 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 jobs:
+  generate-parquet-files:
+    name: Generate testing parquet files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12  # you can adjust as needed
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Generate test parquet files
+        working-directory: test
+        run: |
+          python generate_test_files.py
+      - name: Upload generated files as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: parquet-test-files
+          path: test/generated/   # adjust the path to the directory or files generated
+
   test:
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    name: Julia ${{ matrix.julia-version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    needs: generate-parquet-files
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     permissions: # needed to allow julia-actions/cache to proactively delete old caches that it has created
@@ -22,20 +44,37 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version:
+        julia-version:
           - '1.11'
           - '1.10'
-          - 'pre'
         os:
           - ubuntu-latest
         arch:
           - x64
     steps:
-      - uses: actions/checkout@v4
-      - uses: julia-actions/setup-julia@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Download test files artifact
+        uses: actions/download-artifact@v4
         with:
-          version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
-      - uses: julia-actions/cache@v2
-      - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-runtest@v1
+          name: parquet-test-files
+          path: test/generated/   # ensure this is the same folder where your tests expect the files 
+      - name: Load Julia depot cache
+        uses: julia-actions/cache@v2
+      - name: Build package
+        uses: julia-actions/julia-buildpkg@v1
+      - name: Run tests
+        uses: julia-actions/julia-runtest@v1
+  
+  cleanup:
+    name: Cleanup artifacts
+    needs: test
+    runs-on: ubuntu-latest
+    if: always()   # Run cleanup even if prior jobs fail.
+    steps:
+      - name: Delete python-test-files artifact
+        # This action is provided by peter-evans; adjust version if necessary.
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: parquet-test-files
+
