@@ -1,7 +1,7 @@
-name = "PandasParquet"
+name = "PdParquet"
 uuid = "db0cb4d0-5f4f-4da6-8e6a-a2709472bd55"
 authors = ["Oskar R."]
-version = "1.0.0-DEV"
+version = "0.0.2-DEV"
 
 [deps]
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"

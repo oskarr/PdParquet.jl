@@ -9,6 +9,14 @@ import Pkg
 Pkg.add(url="https://github.com/oskarr/PdParquet.jl", rev="dev")
 ```
 
+It can then be used as:
+```julia
+using DataFrames
+import PdParquet: read_pandas_dataframe
+
+df = read_pandas_dataframe("file.parquet")
+```
+
 For an overview of the Pandas parquet metadata, see the [docs](https://pandas.pydata.org/pandas-docs/version/2.2/development/developer.html).
 
 I'm probably not going to be actively maintaining this beyond what is necessary for my use-case, and it is likely that the code will reside mostly on the dev branch for a long time.
