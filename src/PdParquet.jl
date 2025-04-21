@@ -1,4 +1,4 @@
-module PandasParquet
+module PdParquet
     export read_pandas_parquet
     
     using Parquet, DataFrames, JSON3, CategoricalArrays
