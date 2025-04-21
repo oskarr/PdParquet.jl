@@ -56,7 +56,7 @@ module PdParquet
         local out::Vector{Union{Missing, ZonedDateTime}}
         local mask = @. !ismissing(data)
         out = zeros(length(data)) .* missing
-        out[mask] = ZonedDateTime.(EPOCH + resolution * data[mask], tz)
+        out[mask] = ZonedDateTime.(EPOCH + resolution * data[mask], tz, from_utc=true)
         if !any(mask)
             return out::Vector{ZonedDateTime}
         else
